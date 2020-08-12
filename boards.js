@@ -1,31 +1,50 @@
 var focused_board = 0;
 var all_boards = [];
 
+
+function draw_boards()
+{
+	$("content").innerHTML = "";
+	for(board_idx in all_boards)
+	{
+		var board = all_boards[board_idx];
+		var row = '<button class="board" nav-selectable=true id="board-' + board_idx + '">' + 
+			board["board"] + " - " + board["title"] + '</button>';
+		$("content").innerHTML += row;
+	}
+
+	boards_update();
+}
+
 function boards_load()
 {
 	current_window = "boards";
-	
-	fetch("https://cors-anywhere.herokuapp.com/a.4cdn.org/boards.json")
-	.then((resp) => resp.json())
-	.then(function(boards4)
+
+	if(all_boards.length == 0)
 	{
-		var content = document.getElementById("content");
-		content.innerHTML = "";
+		console.log("Reloading boards");
 
-		for(board_key in boards4["boards"])
+		fetch("https://cors-anywhere.herokuapp.com/a.4cdn.org/boards.json")
+		.then((resp) => resp.json())
+		.then(function(boards4)
 		{
-			var board = boards4["boards"][board_key];
-			var row = '<button class="board" nav-selectable=true id="board-' + board_key + '">' + 
-				board["board"] + " - " + board["title"] + '</button>';
-			content.innerHTML += row;
-			all_boards.push(board);
-		}
+			for(board_key in boards4["boards"])
+			{
+				all_boards.push(boards4["boards"][board_key]);
+			}
 
-	})
+			draw_boards();
 
-	document.getElementById("left").innerText = "";
-	document.getElementById("center").innerText = "Open";
-	document.getElementById("right").innerText = "Search";
+		})
+	}
+	else
+	{
+		draw_boards();
+	}
+
+	$("left").innerText = "Settings";
+	$("center").innerText = "Open";
+	$("right").innerText = "Search";
 }
 
 function boards_update()
@@ -40,7 +59,7 @@ function boards_update()
 		focused_board = all_boards.length - 1;
 	}
 	
-	document.getElementById("board-" + focused_board).focus();
+	$("board-" + focused_board).focus();
 }
 
 function boards_keydown(key, event)
@@ -57,8 +76,16 @@ function boards_keydown(key, event)
 	}
 	else if(key == "Enter")
 	{
-		// We leave and go to threads
-		threads_load(all_boards[focused_board]["board"])
+		if(all_boards.length != 0)
+		{
+			// We leave and go to threads
+			show_loading();
+			threads_load(all_boards[focused_board]["board"])
+		}
+	}
+	else if(key == "SoftLeft")
+	{
+		settings_load();	
 	}
 
 }

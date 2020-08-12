@@ -3,10 +3,13 @@ var lazyload_timeout;
 
 var focused_thread;
 var all_threads = [];
+var current_board = "";
+
+var thread_cancelled = false;
 
 function threads_lazyloader_do()
 {
-	var scroll = document.getElementById("content").scrollTop;
+	var scroll = $("content").scrollTop;
 	for(i = 0; i < lazyload_images.length; i++)
 	{
 		img = lazyload_images[i];
@@ -30,6 +33,8 @@ function threads_lazyloader()
 
 function threads_load(board)
 {
+	current_board = board;
+	thread_cancelled = false;
 	current_window = "threads";
 	console.log("Loading board: " + board);
 
@@ -37,6 +42,11 @@ function threads_load(board)
 	.then((resp) => resp.json())
 	.then(function(pages)
 	{
+		if(thread_cancelled)
+		{
+			return;
+		}
+
 		var content = document.getElementById("content");
 		content.innerHTML = "";
 
@@ -100,9 +110,9 @@ function threads_load(board)
 		threads_lazyloader();
 	})
 
-	document.getElementById("left").innerText = "Catalog";
-	document.getElementById("center").innerText = "Open";
-	document.getElementById("right").innerText = "Search";
+	$("left").innerText = "Sort";
+	$("center").innerText = "Open";
+	$("right").innerText = "Search";
 }
 
 function threads_update()
@@ -134,6 +144,15 @@ function threads_keydown(key, event)
 	else if(key == "Backspace")
 	{
 		event.preventDefault();
+		thread_cancelled = true;
 		boards_load();
+	}
+	else if(key == "Enter")
+	{
+		if(all_threads.length != 0)
+		{
+			show_loading();
+			posts_load(all_threads[focused_thread]["no"]);	
+		}	
 	}
 }
